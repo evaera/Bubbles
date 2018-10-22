@@ -1,0 +1,14 @@
+{
+  "name": "Bricks",
+  "servePort": 8000,
+  "partitions": {
+    "lib": {
+      "path": "lib",
+      "target": "ServerScriptService.Bricks"
+    },
+    "testez": {
+      "path": "vendor/testez/lib",
+      "target": "TestService.TestEZ"
+    }
+  }
+}
