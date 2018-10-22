@@ -1,33 +1,76 @@
 local Brick = require(script.Parent.Bricks).Brick
 
-local Animal = Brick({
+local Character = Brick({
 	props = {
-		foo = true;
+		Health = 100
 	};
 	init = function(self, options)
-		self:Test()
-	end;
-	methods = function(Animal)
-		local function something(self, x)
-			print(x * self.foo)
-		end
+		print("A new", tostring(self), "has joined!")
 
-		function Animal:Test()
-			self.foo = 9
-			something(self, 5)
+		self.Health = options.Health or self.Health
+	end;
+	methods = {
+		Hurt = function(self, amount)
+			self.Health = self.Health - amount
+		end;
+	}
+})
+
+local Warrior = Character:compose({
+	name = "Warrior";
+	props = {
+		Stamina = 50
+	};
+	deepProps = {
+		Skills = {"Smithing"}
+	};
+	methods = function(Warrior)
+		function Warrior:Fight(character)
+			character:Hurt(10)
+			self.Stamina = self.Stamina - 20
 		end
 	end
 })
 
-local Test = Animal:props({
-	bar = false;
+local Priest = Brick:compose(Warrior)
+	:name("Priest")
+	:props({
+		Mana = 50
+	})
+	:deepProps({
+		Skills = {"Tailoring"}
+	})
+	:methods(function(Priest)
+		function Priest:Heal(character)
+			character:Hurt(-10)
+			self.Mana = self.Mana - 15
+		end
+	end)
+
+local Paladin = Character:compose(Warrior, Priest)
+	:name("Paladin")
+	:init(function(self)
+		self:Heal(self)
+	end)
+
+local Uther = Paladin.new({
+	Health = 200
 })
 
-local Test2 = Animal:compose({
-	props = {
-		bar = false;
-	}
+local Garrosh = Warrior.new({
+	Health = 10
 })
 
-print(Test.new().bar)
-print(Test2.new().bar)
+Uther:Fight(Garrosh)
+
+print("Garrosh: ", Garrosh.Health)
+
+print(table.concat(Uther.Skills, ", "))
+
+--[[
+	Output:
+	  A new Paladin has joined!
+  A new Warrior has joined!
+  Garrosh:  0
+  Smithing, Tailoring
+]]
