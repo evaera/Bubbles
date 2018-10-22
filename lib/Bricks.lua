@@ -1,3 +1,8 @@
+--[[
+	Bricks are composable objects
+]]
+
+
 local function deepCopy(obj)
   if type(obj) ~= 'table' then return obj end
   local res = setmetatable({}, getmetatable(obj))
@@ -186,7 +191,11 @@ function MakeBrick(descriptor)
 	end
 
 	-- Constructor
-	function Brick.new(options)
+	function Brick.new(options, ...)
+		options = options or {}
+		assert(type(options) == "table", ("Bad argument #1 to %s.new: must be a table or nil"):format(Brick.compose.name))
+		assert(select("#", ...) == 0, ("%s.new only accepts one argument (a dictionary)."):format(Brick.compose.name))
+
 		local self = setmetatable({}, Brick)
 
 		for _, init in ipairs(self.compose.initializers) do
