@@ -156,6 +156,19 @@ BrickCompose = setmetatable({
 	end
 })
 
+local UtilityFunctions do
+	UtilityFunctions = {}
+
+	local function addKeys(t)
+		for key in pairs(t) do
+			UtilityFunctions[key] = true
+		end
+	end
+
+	addKeys(BrickCompose)
+	addKeys(BrickComposeShorthands)
+end
+
 function MakeBrick(descriptor)
 	local Brick = setmetatable({}, {
 		__index = function(self, key) -- Default properties
@@ -207,7 +220,7 @@ function MakeBrick(descriptor)
 	end
 
 	-- Utility functions
-	for name in pairs(BrickCompose) do
+	for name in pairs(UtilityFunctions) do
 		Brick[name] = function(self, value)
 			return self:compose({
 				[name] = value
