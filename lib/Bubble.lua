@@ -1,5 +1,5 @@
 --[[
-	Bricks are composable objects
+	Bubbles are composable objects
 ]]
 
 
@@ -59,13 +59,13 @@ local function merge(toObj, fromObj)
 	end
 end
 
-local MakeBrick, BrickCompose -- forward declarations
+local MakeBubble, BubbleCompose -- forward declarations
 
-local function isBrick(value)
-	return type(value) == "table" and type(value.compose) == "table" and getmetatable(value.compose) == getmetatable(BrickCompose)
+local function isBubble(value)
+	return type(value) == "table" and type(value.compose) == "table" and getmetatable(value.compose) == getmetatable(BubbleCompose)
 end
 
-local BrickComposeShorthands = {
+local BubbleComposeShorthands = {
 	init = function(descriptor, callback)
 		if descriptor.initializers == nil then
 			descriptor.initializers = {}
@@ -90,15 +90,15 @@ local BrickComposeShorthands = {
 }
 
 -- Default metadata object
-BrickCompose = setmetatable({
-	name = "Brick";
+BubbleCompose = setmetatable({
+	name = "Bubble";
 	initializers = {};
 	props = {};
 	deepProps = {};
 	composers = {};
 	methods = {};
 }, {
-	-- TODO: Compose with non-Brick objects by checking for .new
+	-- TODO: Compose with non-Bubble objects by checking for .new
 	__call = function(...)
 		local composables = {...}
 		local descriptor = {}
@@ -109,8 +109,8 @@ BrickCompose = setmetatable({
 		local methods = {}
 		local deepProps = {}
 
-		for i, brick in ipairs(composables) do
-			local compose = brick.compose or brick
+		for i, bubble in ipairs(composables) do
+			local compose = bubble.compose or bubble
 
 			if type(compose) == "string" then
 				compose = {name = compose}
@@ -118,10 +118,10 @@ BrickCompose = setmetatable({
 			end
 
 			if type(compose) ~= "table" then
-				error(("Invalid type %s given for composition; must be a Brick, dictionary, or string."):format(type(compose)), 2)
+				error(("Invalid type %s given for composition; must be a Bubble, dictionary, or string."):format(type(compose)), 2)
 			end
 
-			for key, shorthand in pairs(BrickComposeShorthands) do
+			for key, shorthand in pairs(BubbleComposeShorthands) do
 				if type(compose[key]) == "function" then
 					compose[key] = shorthand(compose, compose[key])
 				end
@@ -145,14 +145,14 @@ BrickCompose = setmetatable({
 		descriptor.methods = assign({}, unpack(methods))
 		descriptor.deepProps = deepProps
 
-		local brick = MakeBrick(descriptor)
+		local bubble = MakeBubble(descriptor)
 
-		for _, composer in ipairs(brick.compose.composers) do
-			local result = composer(brick, composables)
-			brick = result ~= nil and result or brick
+		for _, composer in ipairs(bubble.compose.composers) do
+			local result = composer(bubble, composables)
+			bubble = result ~= nil and result or bubble
 		end
 
-		return brick
+		return bubble
 	end
 })
 
@@ -165,12 +165,12 @@ local UtilityFunctions do
 		end
 	end
 
-	addKeys(BrickCompose)
-	addKeys(BrickComposeShorthands)
+	addKeys(BubbleCompose)
+	addKeys(BubbleComposeShorthands)
 end
 
-function MakeBrick(descriptor)
-	local Brick = setmetatable({}, {
+function MakeBubble(descriptor)
+	local Bubble = setmetatable({}, {
 		__index = function(self, key) -- Default properties
 			if self.compose.props[key] ~= nil then
 				return self.compose.props[key]
@@ -183,33 +183,33 @@ function MakeBrick(descriptor)
 			return self:compose(...)
 		end;
 	})
-	Brick.__index = Brick
-	Brick.__tostring = function(self)
+	Bubble.__index = Bubble
+	Bubble.__tostring = function(self)
 		return self.compose.name
 	end
-	Brick.compose = setmetatable(assign({}, BrickCompose, descriptor), getmetatable(BrickCompose))
+	Bubble.compose = setmetatable(assign({}, BubbleCompose, descriptor), getmetatable(BubbleCompose))
 
-	for key, value in pairs(Brick.compose) do
-		if BrickCompose[key] == nil then
-			error(("Invalid key %q in Brick descriptor"):format(key), 2)
+	for key, value in pairs(Bubble.compose) do
+		if BubbleCompose[key] == nil then
+			error(("Invalid key %q in Bubble descriptor"):format(key), 2)
 		end
 
-		if value ~= nil and type(value) ~= type(BrickCompose[key]) then
-			error(("Invalid type %s for key %q in Brick descriptor"):format(type(value), key), 2)
+		if value ~= nil and type(value) ~= type(BubbleCompose[key]) then
+			error(("Invalid type %s for key %q in Bubble descriptor"):format(type(value), key), 2)
 		end
 	end
 
-	for methodName, method in pairs(Brick.compose.methods) do
-		Brick[methodName] = method
+	for methodName, method in pairs(Bubble.compose.methods) do
+		Bubble[methodName] = method
 	end
 
 	-- Constructor
-	function Brick.new(options, ...)
+	function Bubble.new(options, ...)
 		options = options or {}
-		assert(type(options) == "table", ("Bad argument #1 to %s.new: must be a table or nil"):format(Brick.compose.name))
-		assert(select("#", ...) == 0, ("%s.new only accepts one argument (a dictionary)."):format(Brick.compose.name))
+		assert(type(options) == "table", ("Bad argument #1 to %s.new: must be a table or nil"):format(Bubble.compose.name))
+		assert(select("#", ...) == 0, ("%s.new only accepts one argument (a dictionary)."):format(Bubble.compose.name))
 
-		local self = setmetatable({}, Brick)
+		local self = setmetatable({}, Bubble)
 
 		for _, init in ipairs(self.compose.initializers) do
 			local value = init(self, options)
@@ -221,23 +221,23 @@ function MakeBrick(descriptor)
 
 	-- Utility functions
 	for name in pairs(UtilityFunctions) do
-		Brick[name] = function(self, value)
+		Bubble[name] = function(self, value)
 			return self:compose({
 				[name] = value
 			})
 		end
 	end
 
-	return Brick
+	return Bubble
 end
 
 return {
-	Brick = MakeBrick({});
+	Bubble = MakeBubble({});
 
 	deepCopy = deepCopy;
 	assign = assign;
 	arrayConcat = arrayConcat;
 	tableType = tableType;
 	merge = merge;
-	isBrick = isBrick;
+	isBubble = isBubble;
 }

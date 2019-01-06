@@ -1,6 +1,6 @@
-local Brick = require(script.Parent.Bricks).Brick
+local Bubble = require(script.Parent.Bubbles).Bubble
 
-local Character = Brick({
+local Character = Bubble({
 	props = {
 		Health = 100
 	};
@@ -32,7 +32,7 @@ local Warrior = Character:compose({
 	end
 })
 
-local Priest = Brick:compose(Warrior)
+local Priest = Bubble:compose(Warrior)
 	:name("Priest")
 	:props({
 		Mana = 50
@@ -69,8 +69,8 @@ print(table.concat(Uther.Skills, ", "))
 
 --[[
 	Output:
-	  A new Paladin has joined!
-  A new Warrior has joined!
-  Garrosh:  0
-  Smithing, Tailoring
+		A new Paladin has joined!
+	A new Warrior has joined!
+	Garrosh:  0
+	Smithing, Tailoring
 ]]

@@ -1,10 +1,10 @@
 {
-  "name": "Bricks",
+  "name": "Bubbles",
   "servePort": 8000,
   "partitions": {
     "lib": {
       "path": "lib",
-      "target": "ServerScriptService.Bricks"
+      "target": "ServerScriptService.Bubbles"
     },
     "testez": {
       "path": "vendor/testez/lib",

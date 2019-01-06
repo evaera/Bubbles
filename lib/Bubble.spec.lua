@@ -1,8 +1,8 @@
 return function()
-	local Brick = require(script.Parent.Bricks).Brick
-	describe("Brick", function()
+	local Bubble = require(script.Parent.Bubbles).Bubble
+	describe("Bubble", function()
 		it("Should create new objects", function()
-			local blank = Brick()
+			local blank = Bubble()
 			expect(blank.new).to.be.ok()
 			expect(blank.compose).to.be.ok()
 			expect(blank.new()).to.be.ok()
@@ -13,7 +13,7 @@ return function()
 			local array = {1, 2}
 			local dictionary = {foo = "bar"}
 
-			local first = Brick("none", {
+			local first = Bubble("none", {
 				name = "first";
 				props = {
 					firstProperty = true;
