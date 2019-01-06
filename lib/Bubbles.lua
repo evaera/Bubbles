@@ -2,7 +2,6 @@
 	Bubbles are composable objects
 ]]
 
-
 local function deepCopy(obj)
   if type(obj) ~= 'table' then return obj end
   local res = setmetatable({}, getmetatable(obj))
@@ -71,7 +70,6 @@ local BubbleComposeShorthands = {
 			descriptor.initializers = {}
 		end
 
-
 		table.insert(descriptor.initializers, callback)
 	end;
 
@@ -137,7 +135,6 @@ BubbleCompose = setmetatable({
 
 			merge(deepProps, compose.deepProps or {})
 		end
-
 
 		descriptor.initializers = arrayConcat(unpack(initializers))
 		descriptor.composers = arrayConcat(unpack(composers))
