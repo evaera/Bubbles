@@ -170,24 +170,23 @@ local UtilityFunctions do
 end
 
 function MakeBubble(descriptor)
-	local Bubble = setmetatable({}, {
-		__index = function(self, key) -- Default properties
-			if self.compose.props[key] ~= nil then
-				return self.compose.props[key]
-			end
+	local Bubble = {}
+	Bubble.__index = Bubble
+	Bubble.__tostring = function(self)
+		return self.compose.name
+	end
+	Bubble.compose = setmetatable(
+		assign({}, BubbleCompose, descriptor),
+		getmetatable(BubbleCompose)
+	)
 
-			return self.compose.deepProps[key]
-		end;
+	setmetatable(Bubble, {
+		__index = Bubble.compose.methods;
 
 		__call = function(self, ...)
 			return self:compose(...)
 		end;
 	})
-	Bubble.__index = Bubble
-	Bubble.__tostring = function(self)
-		return self.compose.name
-	end
-	Bubble.compose = setmetatable(assign({}, BubbleCompose, descriptor), getmetatable(BubbleCompose))
 
 	for key, value in pairs(Bubble.compose) do
 		if BubbleCompose[key] == nil then
@@ -199,10 +198,6 @@ function MakeBubble(descriptor)
 		end
 	end
 
-	for methodName, method in pairs(Bubble.compose.methods) do
-		Bubble[methodName] = method
-	end
-
 	-- Constructor
 	function Bubble.new(options, ...)
 		options = options or {}
@@ -210,6 +205,14 @@ function MakeBubble(descriptor)
 		assert(select("#", ...) == 0, ("%s.new only accepts one argument (a dictionary)."):format(Bubble.compose.name))
 
 		local self = setmetatable({}, Bubble)
+
+		for key, value in pairs(self.compose.deepProps) do
+			self[key] = value
+		end
+
+		for key, value in pairs(self.compose.props) do
+			self[key] = value
+		end
 
 		for _, init in ipairs(self.compose.initializers) do
 			local value = init(self, options)
