@@ -172,7 +172,7 @@ local FoobarBaz = Bubble(Foo, Bar, Baz)
 By default, methods from later-composed Bubbles override methods from earlier-composed ones. But Bubble provides a `Collision` utility Bubble which lets you override this behavior.
 
 ### Forbidding Overriding
-By composing with a Bubble created with `Collsion.forbid`, you can explicitly define method names for which you want to forbid overriding. If you then compose with another Bubble that has methods that share those names, an error will be thrown.
+By composing with a Bubble created with `Collsion.forbidCollision`, you can explicitly define method names for which you want to forbid overriding. If you then compose with another Bubble that has methods that share those names, an error will be thrown.
 
 ```lua
 local Bubbles = require(path.to.Bubbles)
@@ -258,7 +258,7 @@ local hasFoo = HasFoo.new() -- This now works without error.
 
 ## Composers
 
-Composers are special hook functions which can influence composition. The Collision and Required utility Bubbles are implemented using composers. Composers are a very powerful and dangerous feature, so if you should only use them when necessary.
+Composers are special hook functions which can influence composition. The Collision and Required utility Bubbles are implemented using composers. Composers are a very powerful and dangerous feature, so you should only use them when necessary.
 
 Composers are stored just like the other metadata types. Each composer stored inside of a Bubble is ran in sequence (in order of composition) as the last step of a `:compose` call (also including helper methods, as they use `:compose` internally).
 
