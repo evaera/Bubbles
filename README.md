@@ -43,6 +43,7 @@ There are 8 kinds of metadata:
   - Tables are *deep-copied*.
   - Dictionaries are *deeply merged*.
   - Arrays are **concatenated**.
+  - If a normal property and a deep property share  the same name, the normal property wins.
 - `statics`: dictionary (table)
   - Both static methods and properties can be contained within `statics`.
   - They are available on the non-instance version of the Bubble.
