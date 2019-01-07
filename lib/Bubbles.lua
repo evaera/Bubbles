@@ -376,7 +376,6 @@ local Required do
 
 			for metaTypeName, metaType in pairs(bubble._required) do
 				for requiredName in pairs(metaType) do
-					print(requiredName)
 					assert(
 						bubble.compose[metaTypeName][requiredName] ~= nil,
 						("Required member %q (%s) is required before instantiation but wasn't present."):format(requiredName, metaTypeName)
