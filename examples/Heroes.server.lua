@@ -41,9 +41,15 @@ local Priest = Bubble:compose(Warrior)
 		Skills = {"Tailoring"}
 	})
 	:methods(function(Priest)
+		local function heal(self)
+
+		end
+
 		function Priest:Heal(character)
 			character:Hurt(-10)
 			self.Mana = self.Mana - 15
+
+			heal(self)
 		end
 	end)
 

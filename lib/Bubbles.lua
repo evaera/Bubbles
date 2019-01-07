@@ -1,5 +1,6 @@
 --[[
-	Bubbles are composable objects
+	Bubbles are composable objects presented as an alternative to
+	classical-style inheritance.
 ]]
 
 -- Forward declarations
@@ -16,7 +17,7 @@ local Util = {} do
 	function Util.assign(toObj, ...)
 		for _, fromObj in ipairs({...}) do
 			for key, value in pairs(fromObj) do
-				toObj[key] = Util.deepCopy(value)
+				toObj[key] = value
 			end
 		end
 
@@ -154,8 +155,8 @@ local ChainMethods do
 
 				descriptor.name = compose.name or descriptor.name
 
-				Util.merge(deepProps, compose.deepProps or {})
-				Util.merge(deepStatics, compose.deepStatics or {})
+				Util.merge(deepProps, Util.deepCopy(compose.deepProps or {}))
+				Util.merge(deepStatics, Util.deepCopy(compose.deepStatics or {}))
 			end
 
 			descriptor.initializers = Util.arrayConcat(unpack(initializers))
@@ -170,7 +171,10 @@ local ChainMethods do
 
 			for _, composer in ipairs(bubble.compose.composers) do
 				local result = composer(bubble, composables)
-				bubble = result ~= nil and result or bubble
+
+				if result ~= nil then
+					bubble = result
+				end
 			end
 
 			return bubble
@@ -284,7 +288,7 @@ local Collision do
 					if currentMethod then
 						return descriptor.methods[methodName](...), currentMethod(...)
 					else
-						return descriptor.methods[methodName](...)
+						return select(1, descriptor.methods[methodName](...))
 					end
 				end
 			end

@@ -105,6 +105,7 @@ return function()
 			expect(instance.dictionary.secondProperty).to.equal("goodbye")
 			expect(instance.shallowDictionary.firstProperty).to.never.be.ok()
 			expect(instance.shallowDictionary.secondProperty).to.equal("goodbye")
+			expect(first.compose.deepProps.dictionary.secondProperty).to.never.be.ok()
 			expect(second.compose.deepProps.dictionary).to.never.equal(first.compose.deepProps.dictionary)
 		end)
 
