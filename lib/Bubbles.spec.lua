@@ -1,5 +1,8 @@
 return function()
-	local Bubble = require(script.Parent.Bubbles).Bubble
+	local Bubbles = require(script.Parent.Bubbles)
+	local Bubble = Bubbles.Bubble
+	local Util = Bubbles.Util
+
 	describe("Bubble", function()
 		it("Should create new objects", function()
 			local blank = Bubble()
@@ -29,6 +32,9 @@ return function()
 						firstProperty = "hello";
 					}
 				};
+				deepStatics = {
+					array = {7, 8};
+				};
 				init = function(self, options)
 					print(options.firstInitValue)
 					self.firstInitValue = options.firstInitValue
@@ -54,6 +60,9 @@ return function()
 						secondProperty = "goodbye";
 					}
 				};
+				deepStatics = {
+					array = {9, 10};
+				};
 				init = function(self, options)
 					self.secondInitValue = options.secondInitValue
 				end;
@@ -64,6 +73,10 @@ return function()
 				end;
 			})
 
+			for i = 7, 10 do
+				expect(second.array[i-6]).to.equal(i)
+			end
+
 			local instance = second.new({
 				firstInitValue = 1;
 				secondInitValue = 2;
@@ -72,7 +85,6 @@ return function()
 			instance:firstMethod(3)
 			instance:secondMethod(4)
 
-			expect(instance.compose.name).to.equal("second")
 			expect(tostring(instance)).to.equal("second")
 			expect(instance.firstInitValue).to.equal(1)
 			expect(instance.secondInitValue).to.equal(2)
@@ -92,7 +104,7 @@ return function()
 			expect(instance.dictionary.secondProperty).to.equal("goodbye")
 			expect(instance.shallowDictionary.firstProperty).to.never.be.ok()
 			expect(instance.shallowDictionary.secondProperty).to.equal("goodbye")
-			expect(instance.compose.deepProps.dictionary).to.never.equal(first.compose.deepProps.dictionary)
+			expect(second.compose.deepProps.dictionary).to.never.equal(first.compose.deepProps.dictionary)
 		end)
 
 		it("should allow nilling default props", function()
@@ -130,17 +142,27 @@ return function()
 
 		it("should allow static methods", function()
 			local callCount = 0
-			local bubble = Bubble:methods({
-				method = function(self, param)
+			local bubble = Bubble:statics({
+				method = function(param)
 					callCount = callCount + 1
-					expect(self).to.never.be.ok()
 					expect(param).to.equal(4)
 				end
+			}):methods({
+				bad = function() end;
 			})
+
+			expect(bubble.bad).to.never.be.ok()
 
 			bubble.method(4)
 
 			expect(callCount).to.equal(1)
+		end)
+	end)
+
+	describe("Util.isBubble", function()
+		it("should return true if passed a bubble", function()
+			expect(Util.isBubble(Bubble)).to.equal(true)
+			expect(Util.isBubble(Bubble.new())).to.equal(true)
 		end)
 	end)
 end
