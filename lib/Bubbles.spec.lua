@@ -2,6 +2,8 @@ return function()
 	local Bubbles = require(script.Parent.Bubbles)
 	local Bubble = Bubbles.Bubble
 	local Util = Bubbles.Util
+	local Collision = Bubbles.Collision
+	local Required = Bubbles.Required
 
 	describe("Bubble", function()
 		it("Should create new objects", function()
@@ -36,7 +38,6 @@ return function()
 					array = {7, 8};
 				};
 				init = function(self, options)
-					print(options.firstInitValue)
 					self.firstInitValue = options.firstInitValue
 				end;
 				methods = function(first)
@@ -163,6 +164,89 @@ return function()
 		it("should return true if passed a bubble", function()
 			expect(Util.isBubble(Bubble)).to.equal(true)
 			expect(Util.isBubble(Bubble.new())).to.equal(true)
+		end)
+	end)
+
+	describe("Util.merge", function()
+		it("Should deep-merge dictionaries", function()
+			local merged = Util.merge({
+				one = {
+					two = {
+						k1 = 1;
+					}
+				}
+			}, {
+				one = {
+					two = {
+						k2 = 2;
+					}
+				}
+			})
+
+			expect(merged.one.two.k1).to.equal(1)
+			expect(merged.one.two.k2).to.equal(2)
+		end)
+	end)
+
+	describe("Collision", function()
+		it("should forbid collisions", function()
+			expect(function()
+				Collision.forbidCollision({"foo"}):methods({
+					foo = function() end;
+				}):methods({
+					foo = function() end;
+				})
+			end).to.throw()
+		end)
+
+		it("should defer collisions", function()
+			local callCountA = 0
+			local callCountB = 0
+
+			local a, b, c = Collision.deferCollision({"Destroy"}):compose({ methods = {
+				Destroy = function()
+					callCountA = callCountA + 1
+					return 1
+				end;
+			}, name = "d1" }):compose({ methods = {
+				Destroy = function()
+					callCountB = callCountB + 1
+					return 2
+				end;
+			}, name = "d2"}):compose({ methods = {
+				Destroy = function()
+					return 3
+				end;
+			}, name = "d3"}).new().Destroy()
+
+			expect(a).to.equal(3)
+			expect(b).to.equal(2)
+			expect(c).to.equal(1)
+			expect(callCountA).to.equal(1)
+			expect(callCountB).to.equal(1)
+		end)
+	end)
+
+	describe("Require", function()
+		it("should require fields", function()
+			local required = Required.require({
+				methods = {
+					foo = true;
+				};
+				props = {
+					bar = true;
+				}
+			})
+
+			expect(required.new).to.throw()
+
+			expect(function()
+				required:methods({
+					foo = function() end;
+				}):props({
+					bar = 2
+				}).new()
+			end).to.never.throw()
 		end)
 	end)
 end

@@ -60,15 +60,27 @@ local Util = {} do
 				toObj[key] = Util.arrayConcat(toObj[key], value)
 			end
 		end
+
+		return toObj
 	end
 
 	function Util.isBubble(value)
 		return type(value) == "table" and (type(value.compose) == "table" and getmetatable(value.compose) == getmetatable(Descriptor)) or (type(getmetatable(value).compose) == "table" and getmetatable(getmetatable(value).compose) == getmetatable(Descriptor))
 	end
+
+	function Util.makeDictionary(array)
+		local dictionary = {}
+
+		for i = 1, #array do
+			dictionary[array[i]] = true
+		end
+
+		return dictionary
+	end
 end
 
 --[[ Descriptor ]]--
-do
+local ChainMethods do
 	local DescriptorFunctions = {
 		init = function(descriptor, callback)
 			if descriptor.initializers == nil then
@@ -103,10 +115,9 @@ do
 		deepStatics = {};
 	}, {
 		-- TODO: Compose with non-Bubble objects by checking for .new
-		__call = function(...)
+		__call = function(_, ...)
 			local composables = {...}
 			local descriptor = {}
-			local descriptors = {}
 			local initializers = {}
 			local composers = {}
 			local props = {}
@@ -130,10 +141,11 @@ do
 				for key, shorthand in pairs(DescriptorFunctions) do
 					if type(compose[key]) == "function" then
 						compose[key] = shorthand(compose, compose[key])
+					elseif compose[key] ~= nil and Descriptor[key] == nil then
+						error(("Shorthand %q is required to be a function."):format(key), 2)
 					end
 				end
 
-				table.insert(descriptors, compose)
 				table.insert(initializers, compose.initializers)
 				table.insert(composers, compose.composers)
 				table.insert(props, compose.props)
@@ -166,9 +178,10 @@ do
 	})
 
 	do
-		local function addKeys(t)
+		ChainMethods = {}
+		local function createChainMethods(t)
 			for key in pairs(t) do
-				Descriptor.statics[key] = function(self, value)
+				ChainMethods[key] = function(self, value)
 					return self:compose({
 						[key] = value
 					})
@@ -176,8 +189,8 @@ do
 			end
 		end
 
-		addKeys(Descriptor)
-		addKeys(DescriptorFunctions)
+		createChainMethods(Descriptor)
+		createChainMethods(DescriptorFunctions)
 	end
 end
 
@@ -201,7 +214,10 @@ do
 
 		Bubble.__index = Bubble.compose.methods
 
-		setmetatable(Bubble, { __call = bubbleCall })
+		setmetatable(Bubble, {
+			__call = bubbleCall;
+			__tostring = Bubble.__tostring;
+		})
 
 		for key, value in pairs(Bubble.compose) do
 			if Descriptor[key] == nil then
@@ -249,7 +265,127 @@ do
 	end
 end
 
+local Bubble do
+	Bubble = MakeBubble({
+		statics = ChainMethods
+	});
+end
+
+local Collision do
+	local function makeDeferredMethod(composables, methodName)
+		local method
+
+		for _, composable in ipairs(composables) do
+			local descriptor = composable.compose or composable
+
+			if descriptor.methods and descriptor.methods[methodName] then
+				local currentMethod = method
+				method = function(...)
+					if currentMethod then
+						return descriptor.methods[methodName](...), currentMethod(...)
+					else
+						return descriptor.methods[methodName](...)
+					end
+				end
+			end
+		end
+
+		return method
+	end
+
+	Collision = Bubble({
+		name = "Collision";
+		deepStatics = {
+			_collision = {
+				defer = {};
+				forbid = {};
+			}
+		};
+		statics = {
+			deferCollision = function(opts)
+				return Collision.setupCollision({ defer = opts })
+			end;
+			forbidCollision = function(opts)
+				return Collision.setupCollision({ forbid = opts })
+			end;
+			setupCollision = function(opts)
+				return Collision:compose({
+					deepStatics = {
+						_collision = opts
+					}
+				})
+			end;
+		};
+		composers = {
+			function(bubble, composables)
+				if not bubble._collision then
+					return
+				end
+
+				local forbidden = Util.makeDictionary(bubble._collision.forbid)
+				local deferred = Util.makeDictionary(bubble._collision.defer)
+				local seen = {}
+
+				for _, composable in ipairs(composables) do
+					local descriptor = composable.compose or composable
+
+					for methodName in pairs(descriptor.methods or {}) do
+						if forbidden[methodName] then
+							if seen[methodName] ~= nil then
+								error(("Collision of method %q is forbidden in Bubble %q"):format(methodName, tostring(bubble)), 2)
+							end
+						elseif deferred[methodName] then
+							if seen[methodName] ~= nil then
+								bubble.compose.methods[methodName] = makeDeferredMethod(composables, methodName)
+								deferred[methodName] = nil
+							end
+						end
+
+						seen[methodName] = true
+					end
+				end
+			end
+		}
+	})
+end
+
+local Required do
+	Required = Bubble({
+		name = "Required";
+		deepStatics = {
+			_required = {};
+		};
+		statics = {
+			require = function(opts)
+				return Required:compose({
+					deepStatics = {
+						_required = opts
+					}
+				})
+			end
+		};
+		init = function(self)
+			local bubble = getmetatable(self)
+			if not bubble._required then
+				return
+			end
+
+			for metaTypeName, metaType in pairs(bubble._required) do
+				for requiredName in pairs(metaType) do
+					print(requiredName)
+					assert(
+						bubble.compose[metaTypeName][requiredName] ~= nil,
+						("Required member %q (%s) is required before instantiation but wasn't present."):format(requiredName, metaTypeName)
+					)
+				end
+			end
+		end
+	})
+end
+
 return {
-	Bubble = MakeBubble({});
+	Bubble = Bubble;
+	Collision = Collision;
+	Required = Required;
 	Util = Util;
 }
