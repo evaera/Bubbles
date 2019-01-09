@@ -287,3 +287,7 @@ Take a look at the source code for more details on composers by checking out the
   - For example, instead of naming a method `get`, you should be specific and include *what* you're getting in the method name, e.g. `getCharacter`.
 - All `Bubble.compose` tables share the same metatable. You can use this to detect  if an object is a Bubble. As a convenience, an `isBubble` function is included out of the box inside of the `Util` namespace, exported from the module.
 - There is no out-of-the-box method to check if a Bubble has been composed with another Bubble. This is by design: it is preferred that you use duck typing when checking if an object is valid  rather than relying on inheriting from one specific  object. This makes your code more robust, because it allows you flexibility of switching out different implementations of objects that serve the same purpose. Duck typing is powerful and largely failsafe when using descriptive field names.
+
+## Prior  Work
+
+*Bubbles* is inspired by a similar library for JavaScript: [stampit](https://github.com/stampit-org/stampit). Bubbles are essentially my take on Stamps, adapted especially for Lua.
